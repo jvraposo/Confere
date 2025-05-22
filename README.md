@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Confere - Checagem de Fake News</title>
+  <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@600&family=Inter:wght@300&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: 'Oxanium', cursive;
+      background-color: #06B164;
+    }
+    .subtitle {
+      font-family: 'Inter', sans-serif;
+      font-weight: 300;
+    }
+    /* Animações suaves */
+    .fade-in {
+      animation: fadeIn 0.8s ease forwards;
+    }
+    .fade-out {
+      animation: fadeOut 0.6s ease forwards;
+    }
+    @keyframes fadeIn {
+      from {opacity: 0; transform: translateY(10px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+    @keyframes fadeOut {
+      from {opacity: 1; transform: translateY(0);}
+      to {opacity: 0; transform: translateY(-10px);}
+    }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center">
+
+  <!-- Página Inicial -->
+  <div id="lobbyPage" class="flex flex-col items-center justify-center min-h-screen">
+    <h1 class="text-7xl font-bold text-black mb-2 mt-[-4rem] fade-in">confere?</h1>
+    <p class="subtitle text-xl text-black mb-14 fade-in" style="animation-delay: 0.3s;">seu site de checagem de fake news</p>
+    <button id="startButton" class="bg-[#05803d] hover:bg-[#04632a] text-white px-12 py-4 rounded-xl text-lg font-semibold transition-shadow shadow-md fade-in" style="animation-delay: 0.6s;">
+      Iniciar
+    </button>
+  </div>
+
+  <!-- Página de Verificação -->
+  <div id="checkPage" class="hidden bg-white min-h-screen flex flex-col items-center justify-center text-gray-900 px-4 py-12 max-w-xl mx-auto rounded-xl shadow-lg">
+    <header class="mb-10 text-center">
+      <h1 class="text-6xl font-semibold mb-2">confere?</h1>
+      <p class="text-gray-600 mt-2 text-lg font-light">Escreva uma história que ouviu e descubra se é fato ou fake</p>
+    </header>
+
+    <main class="w-full">
+      <form id="searchForm" class="flex flex-col items-center gap-6">
+        <input
+          id="storyInput"
+          type="text"
+          placeholder="Ex: O homem nunca pisou na Lua"
+          class="w-full border border-gray-300 p-5 rounded-full shadow-md focus:outline-none focus:ring-3 focus:ring-[#06B164] transition"
+          autocomplete="off"
+          required
+        />
+        <button
+          type="submit"
+          class="bg-[#06B164] hover:bg-[#05803d] text-white px-10 py-4 rounded-full transition-shadow shadow-md text-lg font-semibold"
+        >
+          Verificar
+        </button>
+      </form>
+
+      <div
+        id="resultBox"
+        class="mt-12 p-6 rounded-2xl shadow-lg border border-gray-200 text-center hidden"
+      >
+        <h2 id="resultTitle" class="text-4xl font-bold mb-4"></h2>
+        <p id="resultExplanation" class="text-gray-800 text-lg leading-relaxed max-w-xl mx-auto"></p>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const lobbyPage = document.getElementById('lobbyPage');
+    const checkPage = document.getElementById('checkPage');
+    const startButton = document.getElementById('startButton');
+    const resultBox = document.getElementById('resultBox');
+    const resultTitle = document.getElementById('resultTitle');
+    const resultExplanation = document.getElementById('resultExplanation');
+    const searchForm = document.getElementById('searchForm');
+    const storyInput = document.getElementById('storyInput');
+
+    // Dados ampliados com explicações maiores
+    const facts = [
+      {
+        text: "o homem nunca pisou na lua",
+        isFake: true,
+        explanation: "❌ FAKE – Esta é uma teoria da conspiração desacreditada. A Apollo 11 levou Neil Armstrong e Buzz Aldrin à Lua em 1969, onde realizaram experimentos, coletaram amostras e deixaram evidências que foram confirmadas por diversas missões posteriores."
+      },
+      {
+        text: "vacinas causam autismo",
+        isFake: true,
+        explanation: "❌ FAKE – Estudos científicos rigorosos e revisados por pares não encontraram nenhuma ligação entre vacinas e autismo. Esta afirmação originou-se de um estudo fraudulento e foi amplamente refutada pela comunidade médica mundial."
+      },
+      {
+        text: "a água ferve a 100 graus celsius ao nível do mar",
+        isFake: false,
+        explanation: "✅ FATO – A água ferve a 100 °C ao nível do mar devido à pressão atmosférica padrão. Essa temperatura varia conforme a altitude e pressão local."
+      },
+      {
+        text: "a terra é redonda",
+        isFake: false,
+        explanation: "✅ FATO – Evidências científicas abundantes, incluindo imagens de satélites, viagens espaciais e fenômenos naturais, confirmam que a Terra tem formato aproximadamente esférico."
+      },
+      {
+        text: "seres humanos evoluíram dos macacos",
+        isFake: true,
+        explanation: "❌ FAKE – Humanos e macacos compartilham um ancestral comum, mas os humanos não evoluíram diretamente dos macacos que existem hoje. A evolução é um processo complexo e ramificado ao longo de milhões de anos."
+      },
+      {
+        text: "usar celular causa câncer",
+        isFake: true,
+        explanation: "❌ FAKE – Até o momento, não há evidências científicas conclusivas que comprovem que o uso normal de celulares cause câncer. Organizações como a OMS continuam monitorando pesquisas sobre o tema."
+      },
+      {
+        text: "a covid-19 foi criada em laboratório",
+        isFake: true,
+        explanation: "❌ FAKE – A maioria dos estudos aponta que o vírus SARS-CoV-2 tem origem natural, provavelmente de morcegos, e não foi fabricado em laboratório."
+      },
+      {
+        text: "os ovos aumentam o colesterol e causam problemas cardíacos",
+        isFake: true,
+        explanation: "❌ FAKE – Pesquisas recentes mostram que o consumo moderado de ovos não está ligado ao aumento do colesterol ruim ou a problemas cardíacos para a maioria das pessoas."
+      },
+      {
+        text: "os dinossauros e humanos viveram juntos",
+        isFake: true,
+        explanation: "❌ FAKE – Dinossauros foram extintos há cerca de 65 milhões de anos, muito antes do surgimento dos humanos modernos."
+      },
+      {
+        text: "a terra é plana",
+        isFake: true,
+        explanation: "❌ FAKE – A ideia da Terra plana foi refutada há séculos, com provas contundentes vindas da física, astronomia e exploração espacial."
+      }
+    ];
+
+    // Função para mostrar a página de verificação
+    startButton.addEventListener('click', () => {
+      lobbyPage.classList.add('fade-out');
+      setTimeout(() => {
+        lobbyPage.classList.add('hidden');
+        lobbyPage.classList.remove('fade-out');
+        checkPage.classList.remove('hidden');
+        checkPage.classList.add('fade-in');
+      }, 600);
+    });
+
+    // Função para checar as histórias
+    searchForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const input = storyInput.value.trim().toLowerCase();
+
+      const result = facts.find(fact => input.includes(fact.text));
+
+      if (result) {
+        resultTitle.textContent = result.isFake ? '❌ FAKE' : '✅ FATO';
+        resultTitle.className = `text-4xl font-bold mb-4 ${result.isFake ? 'text-red-600' : 'text-green-700'}`;
+        resultExplanation.textContent = result.explanation;
+      } else {
+        resultTitle.textContent = '🤔 Não sei dizer';
+        resultTitle.className = 'text-4xl font-bold mb-4 text-gray-600';
+        resultExplanation.textContent = 'Essa história não está no nosso banco de dados ainda. Continue nos ajudando a ampliar!';
+      }
+
+      resultBox.classList.remove('hidden');
+    });
+  </script>
+</body>
+</html>
